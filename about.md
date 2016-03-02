@@ -4,12 +4,8 @@ title: About
 permalink: /about/
 ---
 
-Some information about you!
-
-### More Information
-
-A place to include any other types of information that you'd like to include about yourself.
+I'm a postdoctoral research fellow at the Cognitive and Decision Sciences (CODES) Research Lab in the School of Psychology, University of Sydney, Australia. I'm passionate about psychology, decision making, and R. This blog is dedicated to publishing material related to R.
 
 ### Contact me
 
-[email@domain.com](mailto:email@domain.com)
+[drsimonjackson@gmail.com](mailto:drsimonjackson@gmail.com)
