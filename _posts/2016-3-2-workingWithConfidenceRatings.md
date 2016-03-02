@@ -546,4 +546,4 @@ This concludes the quick guide for computing some of the most common confidence 
 
 # Sign-off 
 
-As always, what's presented here is just my approach. It's not the only approach, and it's unlikley to be the best approach. But my hope is that you're able to glean something useful from it. Please comment, email me at <drsimonjackson@gmail.com>, or tweet me @drsimonj to chat!
+As always, what's presented here is just my approach. It's not the only approach, and it's unlikley to be the best approach. I hope that you're able to glean something useful from it. Please comment, email me at <drsimonjackson@gmail.com>, or tweet @drsimonj to chat!

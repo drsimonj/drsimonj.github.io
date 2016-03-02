@@ -10,7 +10,7 @@ I'm a cognitive scientist and R enthusiast, currently working as a postdoctoral 
 
 ## This blog
 
-This is a blog of tips, tricks, and experiences I've developed using R. Given my field of research, this blog mostly consists of methods for data munging and analysing data related to psychological research in R.
+This is a blog of tips, tricks, and experiences I've developed using R. Given my field of research, these will mostly consists of methods for wrangling and analysing data related to psychological research in R.
 
 ### Contact me
 
