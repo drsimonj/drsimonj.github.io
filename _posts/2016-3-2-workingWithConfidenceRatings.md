@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Calculating confidence variables in R
+title: Calculating variables with confidence ratings in R
 ---
 
 Simon A Jackson  
