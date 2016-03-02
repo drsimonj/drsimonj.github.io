@@ -1,0 +1,92 @@
+---
+title: "Using strings to streamline nested modelling in R"
+author: "Simon A Jackson"
+date: "3 March 2016"
+output: html_document
+---
+
+Understanding nested models is essential for any good data modeller, particularly those working in scientific disciplines like psychology (my background). In this post, I'll demonstrate how I go about building nested regression models in R. For examples, we'll build some hierarchical (nested) regression models and nested path models.
+
+# Data and modelling questions
+
+We'll be using the `mtcars` data provided with R for this post. This data set provides us with 32 observations scored on eleven continous variables:
+
+```{r}
+str(mtcars)
+```
+
+For this example, we're interested in predicting the `mpg` (Miles per gallon) for cars with their `cyl`	(Number of cylinders), `hp`	(Gross horsepower), and `wt` (Weight [lb/1000]). We'll consider two hypotheses (for two types of models):
+
+1. Using hierarchical regression, do the two-way and three-way interactions between our predictors significantly add to the predictive capacity of the model?
+2. Using path analysis, does the weight of the car fully mediate the prediction of cylinders and horsepower on Miles per gallon?
+
+As we plan on looking at interaction terms, we should start by mean centering our variables. Let's create a copy of the `mtcars` data set with all numeric variables centered just to be safe.
+
+```{r}
+dat <- lapply(mtcars, scale, scale = F)  # Centre but don't standardise
+dat <- as.data.frame(dat)
+summary(dat)
+```
+
+# The beginner's approach
+
+Let's start with the hierarchical regression model. We want to know if adding the interaction terms to the regression provides a statistically significant improvement in model fit (measured by $R^{2}$). A typical beginners approach is to write out spearate models like this:
+
+```{r}
+# Model 1: main effects only
+model.1 <- lm(mpg ~ cyl + hp + wt, dat)
+
+# Model 2: + 2-way interaction terms
+model.2 <- lm(mpg ~ cyl + hp + wt +
+                    cyl:hp + cyl:wt + hp:wt, dat)
+
+# Model 3: + 3-way interaction term
+model.3 <- lm(mpg ~ cyl + hp + wt +
+                    cyl:hp + cyl:wt + hp:wt +
+                    cyl:hp:wt, dat)
+```
+
+We can examine their results by calling summary on each model.
+
+```{r}
+summary(model.1)
+summary(model.2)
+summary(model.3)
+```
+
+We then determine whether each more complex model has a significantly different $R^{2}$ to the less complex model using `anova()`.
+
+```{r}
+anova(model.1, model.2, model.3)
+```
+
+It appears not. Still, this is not important right now. What is important is the process by which we achieved this result.
+
+So far it seems straight forward. But it doesn't seem to scale very well. What if you have a large data set and want four, five, or many more nested models to compare against eachother? The first immediate problem is that you have a lot of R code to type out! Every model has to be a perfect copy of the last, plus the new variables. Then you end up with variables for every model, which need to be summarised and compared separately. Put simply, things can get messy!
+
+# Using strings
+
+Our model function can take strings too! Let's check:
+
+```{r}
+# model.1 <- "Petal.Width ~ Sepal.Width"
+# fit.1   <- lm(model.1, dat)
+# summary(fit.1)
+```
+
+This seems cool, but why bother? The main reason is that we can create our models as string, and iteratively concantenate on them to ensure that we have nested models! Let's try.
+
+```{r}
+# model.2 <- paste(model.1, "Petal.Length", sep = " + ")
+# print(model.2)
+# fit.2   <- lm(model.2, dat)
+# summary(fit.2)
+# anova(fit.1, fit.2)
+```
+
+
+I like to do all of this in a list to (a) keep of track of my models and (b) make model comparisons easy using the `apply()` functions. Let's start small. Let's test out the use of formula.
+
+
+
+
