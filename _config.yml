@@ -54,7 +54,7 @@ baseurl: ""
 #
 
 #markdown: redcarpet  # Removed due to email warnings from GitHub that they're no longer supporting redcarpet
-highlighter: pygments
+highlighter: rouge # changed from 'pygments', which is no longer supported by Github.
 permalink: /:title/
 
 # The release of Jekyll Now that you're using
