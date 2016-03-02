@@ -3,7 +3,6 @@ layout: post
 title: Calculating confidence variables in R
 ---
 
-# Calculating confidence variables in R
 Simon A Jackson  
 1 March 2016  
 
@@ -204,14 +203,14 @@ hist(p.vars$accuracy, xlab = "Accuracy", main = "")
 hist(p.vars$confidence, xlab = "Confidence", main = "")
 ```
 
-![](working-with-confidence-ratings_files/figure-html/unnamed-chunk-8-1.png)
+![_config.yml]({{ site.baseurl }}/images/2016-3-2-workingWithConfidenceRatings_files/figure-html/unnamed-chunk-8-1.png)
 
 ```r
 par(mfrow = c(1, 1))  # reset plotting area
 plot(p.vars$accuracy, p.vars$confidence)
 ```
 
-![](working-with-confidence-ratings_files/figure-html/unnamed-chunk-8-2.png)
+![_config.yml]({{ site.baseurl }}/images/2016-3-2-workingWithConfidenceRatings_files/figure-html/unnamed-chunk-8-2.png)
 
 Looks good. We now have *accuracy* and *confidence* variables for each participant, with means of 51.21% and 63.96%, respectively. None of the values fall outside an acceptable range of 0-100, and there is good spread around a somewhat normal-looking distribution. We also have a correlation of 0.32 between participants' accuracy and confidence, which is a little bit lower than normal for this sort of data, but not unusual.
 
@@ -298,7 +297,7 @@ p.vars$bias <- computeBias(p.vars$confidence, p.vars$accuracy)
 hist(p.vars$bias, xlab = "Bias", main = "")
 ```
 
-![](working-with-confidence-ratings_files/figure-html/unnamed-chunk-12-1.png)
+![_config.yml]({{ site.baseurl }}/images/2016-3-2-workingWithConfidenceRatings_files/figure-html/unnamed-chunk-12-1.png)
 
 We can see that our participants are mostly overconfident (bias > 0), but there are still a large number of participants who are well calibrated (bias around 0) and some even underconfident (bias < 0).
 
@@ -378,7 +377,7 @@ summary(p.vars)
 hist(p.vars$discrimination, xlab = "Discrimination", main = "")
 ```
 
-![](working-with-confidence-ratings_files/figure-html/unnamed-chunk-15-1.png)
+![_config.yml]({{ site.baseurl }}/images/2016-3-2-workingWithConfidenceRatings_files/figure-html/unnamed-chunk-15-1.png)
 
 As the mean is greater than zero, we can see that participants are generally able to discirminate their correct from incorrect answers. We can see, however, that a number of participants are unable to do this, with discrimination scores of zero or even less. Negative scores might indicate a problem to us for further investigation (e.g., perhaps these participants were not responding correctly, misread the instructions, or were not trying).
 
@@ -420,7 +419,7 @@ p.vars <- cbind(p.vars, cor.discrimination = as.vector(p.cor.discrimination))
 hist(p.vars$cor.discrimination, xlab = "Discrimination as Spearman correlation", main = "")
 ```
 
-![](working-with-confidence-ratings_files/figure-html/unnamed-chunk-16-1.png)
+![_config.yml]({{ site.baseurl }}/images/2016-3-2-workingWithConfidenceRatings_files/figure-html/unnamed-chunk-16-1.png)
 
 We now have a second measure of discrimination. From this, our conclusion about discrimination would be similar - participants were generally able to distinguish correct from incorrect answers. However, some participants were unable to do this (correlation around 0), and others had unusual results (correlation < 0) worthy of investigation.
 
@@ -440,7 +439,7 @@ plot(p.vars$discrimination, p.vars$cor.discrimination,
      xlab = "Traditional discrimination", ylab = "Discrimination as Spearman correlation")
 ```
 
-![](working-with-confidence-ratings_files/figure-html/unnamed-chunk-17-1.png)
+![_config.yml]({{ site.baseurl }}/images/2016-3-2-workingWithConfidenceRatings_files/figure-html/unnamed-chunk-17-1.png)
 
 Looks like a good correlation between these variables (0.87), suggesting that we could probably choose either variable as an indicator of discrimination.
 
@@ -532,7 +531,7 @@ for(var in variables)
 par(mfrow = c(1, 1))  # reset plotting area
 ```
 
-![](working-with-confidence-ratings_files/figure-html/unnamed-chunk-19-1.png)
+![_config.yml]({{ site.baseurl }}/images/2016-3-2-workingWithConfidenceRatings_files/figure-html/unnamed-chunk-19-1.png)
 
 We can now look for items that are very difficult or too easy, tricky items that produce considerable overconfidence or poor discrimination, and so on.
 
