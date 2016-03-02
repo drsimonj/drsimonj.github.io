@@ -1,3 +1,8 @@
+---
+layout: post
+title: Calculating confidence variables in R
+---
+
 # Calculating confidence variables in R
 Simon A Jackson  
 1 March 2016  
