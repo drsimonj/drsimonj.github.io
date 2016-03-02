@@ -1,0 +1,340 @@
+---
+title: "Calculating confidence variables in R"
+author: "Simon A Jackson"
+date: "1 March 2016"
+output: 
+  html_document: 
+    keep_md: yes
+    toc: yes
+---
+
+Asking for confidence ratings is a common and important practice in psychological research. However, I often meet researchers who have gathered these ratings but shy away from computing useful information because they're unsure what to do. If this sounds like you, read on! My goal is to demonstrate how I go about calculating some of the most common and useful confidence variables in R, and provide general advise for calculating any variables. Of course anyone can follow along, but this post generally assumes that you have a working knowledge of R.
+
+# What are confidence ratings?
+
+Quick check - what are confidence ratings? Confidence ratings are a particular type of metacognitive rating. They are used to determine the level of certainty a person feels in relation to a particular judgement or decision. A typical example might look like:
+
+- What is the longest river in Asia?
+- How confident are you that your answer is correct from 0% (not at all confident) to 100% (completely confident)?
+
+Psychology experiments often collect these sorts of ratings from many people, in response to many questions. The benefits of collecting these ratings are vast... too vast to cover here. Suffice it to say that the collection of confidence ratings has helped researchers to make many important contributions to their respective fields in the psychological world.
+
+So, returning to our focus, many researchers see the value in collecting these ratings, but have little to no idea about how to use them. Let's have a look at some typical variable calculations and analyses using confidence ratings.
+
+# The data
+
+We'll be making use of the data I collected during my Ph.D, which is available in the `jacksonphd` package from my Github (<https://github.com/drsimonj>). At the time I'm writing this post, this package is still in development, but the data is available, so we'll use it with some added explanation. If you'd like to use the data for your own purposes, please email me at <drsimonjackson@gmail.com>.
+
+Begin by installing the `jacksonphd` package from Github. This will require the `devtools` package.
+
+```{r, eval = FALSE}
+install.packages("devtools")
+library(devtools)
+devtools::install_github("drsimonj/jacksonphd")
+```
+```{r}
+library(jacksonphd)
+```
+
+If all goes well, you should now have access to the data collected for my Ph.D in a list called `phd`. Let's take a quick look at the contents of this list.
+
+```{r}
+lapply(phd, names)
+```
+
+We can see that `phd` contains four lists. Each of these corresponds to one of four participant samples I collected. Each of these lists contains multiple data frames with names like `MD`, `PM`, etc. Each of these is data for a specific test. For example, `MD` stands for the Medical Decision-making test, `EA` is the Esoteric Analogies test, and so on.
+
+For this post, we'll just use data from one test: The Esoteric Analogies test. This test asks questions like **LOVE is to HATE as FRIEND is to: LOVER, PAL, OBEY, ENEMY?** Each question is followed by a confidence rating similar to the earlier example (but using radio buttons with 10% increments: 0%, 10%, 20%, etc). Let's get data for this test from sample 2.
+
+```{r}
+dat <- phd[[2]]$EA  # Data from Esoteric Analogies test for sample 2.
+head(dat)
+```
+
+We can see that the data is in a wide format (i.e., one row per participant). We have columns `a1-14`, `c1-14`, `d1-14`, `t1-14`, and a unique participant `id`. Except for `id`, each column corresponds to some information about one of 14 test items/questions. For each item, we're concerned with information about participants' answer accuracy (`a1-14`) and confidence (`c1-14`). For answer accuracy, `1` indicates a correct answer and `0` an incorrect answer. The confidence ratings report the percentage confidence (0-100) rated by the participant. These are the column naming conventions that I tend to use, but you can use whatever suits you best. My only advice would just be to remain simple and consistent.
+
+Next we want to get this from wide to long format. We can work in wide format, but it means that we have to handle variable calculations for participants and items in different ways. In wide format, for example, to calculate variables for each participant, we'd likley use something like `apply(data.frame, 1, functionToComputeVariable)` to iterate through rows. But for each question, we'd probably need to use something like `mapply(functionToComputeVariable, accuracy.data, confidence.data)` to simultaneously work through the answer accuracy and confidence for each question. In long format, we can ignore these differences. I've provided a convenience function in the `jacksonphd` package to do this for us using my data. If you're using other data, there are many good tutorials on how to achieve this. [HERE'S](http://www.r-bloggers.com/converting-a-dataset-from-wide-to-long/) a nice example using the `reshape` package.
+
+```{r}
+long <- stretchPhd(dat)  # convert to long format - from jacksonphd package
+head(long)
+```
+
+We now have our data in a long format. We have columns for the participant id and test item number. Then separate columns for what were `a1-14`, `c1-14`, `d1-14`, and `t1-14`. Respectively, these are number `i.correct`, `i.confidence`, `i.decision` and `i.rt`. Again, we're just interested in whether an answer was correct, and how confident the person was in their answer. So we'll be looking at `i.correct` and `i.confidence`.
+
+# Variables for each Participant
+
+## Accuracy and Confidence 
+
+Often, the first couple of variables that we're interested in are participants' test scores, called *accuracy* (expressed as a percentage), and the mean of their confidence ratings, called *confidence*. Note that *accuracy* isn't a confidence-based variable, but we'll need it in a moment. We do, however, want to put *accuracy* on the same scale as confidence (again, we'll see why in a second). So let's calculate both as a percent. When working with a vector of 1s and 0s, a neat trick is that the vector mean is the proportion of 1s. So if we calculate the mean of `i.correct` for a participant, we'll have the proportion of answers they got correct. We then just need to multiply this by 100 to convert to a percentage. Confidence is already in a percent format, so we just need to calculate the mean.
+
+We'll do this using `by()` to calculate the results separately for each participant.
+
+```{r}
+# Calculate participant (p) accuracy
+p.accuracy <- by(long, long$id, function(p) mean(p$i.correct) * 100)
+
+# Put results into a Participant Variables data frame
+p.vars <- data.frame(id = names(p.accuracy),
+                     accuracy = as.vector(p.accuracy))
+
+head(p.vars)
+```
+
+We can do the same for confidence but without multiplying by 100.
+
+```{r}
+# Calculate participant confidence
+p.confidence <- by(long, long$id, function(p) mean(p$i.confidence))
+
+# Add results to the Participant Variables data frame
+p.vars <- cbind(p.vars, confidence = as.vector(p.confidence))
+```
+
+Let's take a look at our variables so far.
+
+```{r}
+head(p.vars)
+summary(p.vars)
+par(mfrow = c(1, 2))  # Plot histograms
+hist(p.vars$accuracy, xlab = "Accuracy", main = "")
+hist(p.vars$confidence, xlab = "Confidence", main = "")
+par(mfrow = c(1, 1))  # reset plotting area
+plot(p.vars$accuracy, p.vars$confidence)
+```
+
+Looks good. We now have *accuracy* and *confidence* variables for each participant, with means of `r round(mean(p.vars$accuracy), 2)`% and `r round(mean(p.vars$confidence), 2)`%, respectively. None of the values fall outside an acceptable range of 0-100, and there is good spread around a somewhat normal-looking distribution. We also have a correlation of `r round(cor(p.vars$accuracy, p.vars$confidence), 2)` between participants' accuracy and confidence, which is a little bit lower than normal for this sort of data, but not unusual.
+
+Before moving ahead, let's create functions to handle what we've done so far. This will become useful for when we want to look at question metrics rather than participants.
+
+For accuracy, we want to take the mean of a vector of ones and zeros, and multiply it by 100. For confidence, we just want to take the mean of a numeric vector.
+
+```{r}
+#' Compute accuracy from a vector of 1s (correct) and 0s (incorrect)
+#' Remove missing values by default to be safe.
+#'
+#' @param x Vector of 1s and 0s
+#' @return Percent correct
+computeAccuracy <- function(x) {
+  mean(x, na.rm = TRUE) * 100
+}
+
+#' Compute mean confidence from a numeric vector
+#' We'll remove missing values by default to be safe.
+#'
+#' @param x Numeric vector of confidence ratings
+#' @return Mean confidence
+computeConfidence <- function(x) {
+  mean(x, na.rm = TRUE)
+}
+```
+
+Now let's retry to tighten everything up a bit. Instead of iterating over the whole data set `long`, we'll just iterate over the variable of interest. We'll also use our new functions to cut down on the code. So, starting again...
+
+```{r}
+# Calculate participant (p) accuracy
+p.accuracy <- by(long$i.correct, long$id, computeAccuracy)
+
+# Calculate participant confidence
+p.confidence <- by(long$i.confidence, long$id, computeConfidence)
+
+# Put results into a Participant Variables data frame
+p.vars <- data.frame(id = names(p.accuracy),
+                     accuracy = as.vector(p.accuracy),
+                     confidence = as.vector(p.confidence))
+```
+
+And check that everything looks the same:
+
+```{r}
+summary(p.vars)
+```
+
+Looks good. Time to move on.
+
+## Bias
+From here, the most commonly calculated variable is *bias*, often referred to as *over/underconfidence*. *Bias* is calculated simply as *confidence* minus *accuracy*, and it tells us whether a person tends to be overconfident or underconfident in their answers. This calculation is simple now that we have *accuracy* and *confidence* for each person.
+
+We could take the literal approach of `p.vars$bias <- p.vars$confidence - p.vars$accuracy`. This is probably easiest, but I'll continue using functions for consistency sake.
+
+```{r}
+#' Compute bias scores from vectors of mean confidence and percent correct accuracy scores
+#'
+#' @param confidence Vector of mean percent confidences
+#' @param accuracy Vector of percent answers correct
+#' @return Vector of bias (over/underconfidence) scores
+computeBias <- function(confidence, accuracy) {
+  confidence - accuracy
+}
+
+# Compute bias for all participants
+p.vars$bias <- computeBias(p.vars$confidence, p.vars$accuracy)
+
+hist(p.vars$bias, xlab = "Bias", main = "")
+```
+
+We can see that our participants are mostly overconfident (bias > 0), but there are still a large number of participants who are well calibrated (bias around 0) and some even underconfident (bias < 0).
+
+Let's move on to a more complicated variable.
+
+## Discrimination
+
+Discrimination is a measure of how well a person has distinguished between correct and incorrect answers. There are a number of methods for calculating this. We'll start with the traditional measure of mean confidence for correct answers minus mean confidence for incorrect answers. Let's start with the appropriate function.
+
+```{r}
+#' Compute a traditional discrimination score.
+#'
+#' @param i.correct Vector of 1s and 0s corresponding to answers being correct or not.
+#' @param i.confidence Numeric vector of confidence ratings corresponding to the answers.
+#' @return Traditional discrimination score
+computeDiscrimination <- function(i.correct, i.confidence) {
+  # First check that there is at least one of both correct and incorrect
+  # answers. If not, return NA as discrimination cannot be calculated.
+  if (length(unique(i.correct)) <= 1)
+    return (NA)
+  
+  # Otherwise...
+  
+  # Create logical vector indexing correct answers
+  correct <- as.logical(i.correct)
+  
+  # Compute mean confidence for correct answers.
+  confidence.correct <- mean(i.confidence[correct])
+  
+  # And for incorrect
+  confidence.incorrect <- mean(i.confidence[!correct])
+  
+  # Return their difference
+  confidence.correct - confidence.incorrect
+}
+
+```
+
+Now we'll use this to compute discrimination for each participant.
+
+```{r}
+p.discrimination <- by(long, long$id, function(p) {
+  computeDiscrimination(p$i.correct, p$i.confidence)
+})
+
+p.vars <- cbind(p.vars, discrimination = as.vector(p.discrimination))
+```
+
+and take a quick look...
+
+```{r}
+summary(p.vars)
+hist(p.vars$discrimination, xlab = "Discrimination", main = "")
+```
+
+As the mean is greater than zero, we can see that participants are generally able to discirminate their correct from incorrect answers. We can see, however, that a number of participants are unable to do this, with discrimination scores of zero or even less. Negative scores might indicate a problem to us for further investigation (e.g., perhaps these participants were not responding correctly, misread the instructions, or were not trying).
+
+Let's move on to an alternate measure of discrimination: the confidence-accuracy correlation. In this case, we correlate a participant's confidence ratings with their answer accuracy. A more positive correlation indicates to us that the person has better discriminated correct from incorrect answers. This is commonly done using a gamma correlation given the ordinal nature of the data. To save us from importing more packages, I'll demonstrate this using the base correlation function, `cor()` with the method set to `spearman`. Again, we'll create a function to handle this. We'll then use it with `by()` to calculate the variable and `cbind` it to our variable data frame.
+
+```{r}
+#' Compute discrimination as a confidence-accuracy correlation.
+#'
+#' @param i.correct Vector of 1s and 0s corresponding to answers being correct or not.
+#' @param i.confidence Numeric vector of confidence ratings corresponding to the answers.
+#' @param method a character string indicating which correlation coefficient (or
+#'    covariance) is to be computed. One of "pearson", "kendall", or
+#'    "spearman" (default): can be abbreviated. See ?cor for more details.
+#' @return Traditional discrimination score
+computeCorDiscrimination <- function(i.correct, i.confidence, method = "spearman") {
+
+  # First check that there is at least one of both correct and incorrect
+  # answers. If not, return NA as discrimination cannot be calculated.
+  if (length(unique(i.correct)) <= 1)
+    return (NA)
+  
+  # Also check that there is variance in confidence, which is needed to compute
+  # the correlation.
+  if (length(unique(i.confidence)) <= 1)
+    return (NA)
+  
+  # Otherwise, return correlation
+  cor(i.correct, i.confidence, method = method)
+}
+
+# Compute variable for each participant and bind to other variables in data frame
+p.cor.discrimination <- by(long, long$id, function(p) {
+  computeCorDiscrimination(p$i.correct, p$i.confidence)
+})
+p.vars <- cbind(p.vars, cor.discrimination = as.vector(p.cor.discrimination))
+
+# Examine
+hist(p.vars$cor.discrimination, xlab = "Discrimination as Spearman correlation", main = "")
+```
+
+We now have a second measure of discrimination. From this, our conclusion about discrimination would be similar - participants were generally able to distinguish correct from incorrect answers. However, some participants were unable to do this (correlation around 0), and others had unusual results (correlation < 0) worthy of investigation.
+
+Let's correlate our two discrimination variables to check that they're capturing the same psychological construct.
+
+```{r}
+cor(p.vars$discrimination, p.vars$cor.discrimination, use = "complete.obs")
+plot(p.vars$discrimination, p.vars$cor.discrimination,
+     xlab = "Traditional discrimination", ylab = "Discrimination as Spearman correlation")
+```
+
+Looks like a good correlation between these variables (`r round(cor(p.vars$discrimination, p.vars$cor.discrimination, use = "complete.obs"), 2)`), suggesting that we could probably choose either variable as an indicator of discrimination.
+
+# Variables for each Item
+
+Sometimes, we're more interested in the difference between items/questions than participants. We've now set ourselves up to make life really easy when it comes to switching. By having data in long format, we only need to change the index in `by()` from `id` to `item`. Furthermore, because we've created generally applicable functions for all of our variables, we don't need to write long sections of code anymore. Let's get to it:
+
+```{r}
+
+# For each item, calculate...
+i.accuracy <- by(long$i.correct, long$item, computeAccuracy)  # Accuracy
+
+i.confidence <- by(long$i.confidence, long$item, computeConfidence)  # Confidence
+
+i.bias <- computeBias(i.confidence, i.accuracy)  # Bias
+
+i.discrimination <- by(long, long$item, function(i) {  # Traditional discrimination
+  computeDiscrimination(i$i.correct, i$i.confidence)
+})
+
+i.cor.discrimination <- by(long, long$item, function(i) { # Correlation-based Discrimination
+  computeCorDiscrimination(i$i.correct, i$i.confidence)
+})
+
+# Put results into an Item Variables data frame
+i.vars <- data.frame(item = names(i.accuracy),
+                     accuracy = as.vector(i.accuracy),
+                     confidence = as.vector(i.confidence),
+                     bias = as.vector(i.bias),
+                     discrimination = as.vector(i.discrimination),
+                     cor.discrimination = as.vector(i.cor.discrimination))
+```
+
+Let's take a look.
+
+```{r}
+print(i.vars)
+summary(i.vars)
+
+# Plot histograms for all variables
+variables <- names(i.vars)[names(i.vars) != "item"]
+par(mfrow = c(2, 3))  # Plot histograms
+for(var in variables)
+  hist(i.vars[, var], xlab = "", main = var)
+
+par(mfrow = c(1, 1))  # reset plotting area
+
+```
+
+We can now look for items that are very difficult or too easy, tricky items that produce considerable overconfidence or poor discrimination, and so on.
+
+# Summary
+
+This concludes the quick guide for computing some of the most common confidence rating variables for participants and questions using R. There are a plethora of other variables that can be calculated, but, hopefully, this demonstration will provide you with a standard approach for getting the variables you want. To recap the general approach I've used here for calculating any confidence variables:
+
+- Arrange your data in a long format.
+- Write a function to compute your variable taking only the inputs that are required (genearlly answer accuracy and confidence).
+- Use your function in `by()` to compute your variable for participants, items, or any other grouping variable that interests you.
+- Bind your results into a data frame and voila!
+
+# Sign-off 
+
+As always, what's presented here is just my approach. It's not the only approach, and it's unlikley to be the best approach. But my hope is that you're able to glean something useful from it. Please comment, email me at <drsimonjackson@gmail.com>, or tweet me @drsimonj to chat!
