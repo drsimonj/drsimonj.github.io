@@ -5,7 +5,6 @@ date: "3 March 2016"
 output: 
   html_document: 
     keep_md: yes
-    self_contained: no
 ---
 
 Understanding hierarchical regression is essential for any good data modeller, particularly those working in scientific disciplines like psychology (my background). But building them in R can get fiddly, leaving you with the difficult task of tracking multiple objects that might contain errors. In this post, I'll demonstrate how I construct hierarchical regression models using strings and lists to reduce this complexity and uncertainty.
